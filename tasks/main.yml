@@ -1,8 +1,56 @@
-- apt_repository:
-    repo: 'ppa:ondrej/nginx'
-    update_cache: 'yes'
+- name: Add directory for storing keys
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
   become: yes
-  
+
+- name: Retrieve nginx key
+  get_url:
+    url: https://nginx.org/keys/nginx_signing.key
+    dest: /tmp/nginx.gpg
+    mode: 0644
+  become: yes
+
+- name: Dearmor the nginx key
+  shell: cat /tmp/nginx.gpg | gpg --dearmor > /etc/apt/keyrings/nginx.gpg
+  args:
+    creates: /etc/apt/keyrings/nginx.gpg
+  become: yes
+
+- name: Add nginx repository
+  apt_repository:
+    repo: deb [signed-by=/etc/apt/keyrings/nginx.gpg] http://nginx.org/packages/{{ansible_distribution|lower}} {{ansible_distribution_release}} nginx
+    filename: nginx
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Set up pinning to ensure nginx's packages are used over the distribution provided one
+  copy:
+    content: |
+      Package: *
+      Pin: origin nginx.org
+      Pin: release o=nginx
+      Pin-Priority: 900
+    dest: /etc/apt/preferences.d/99nginx
+    owner: root
+    group: root
+    mode: 0644
+  become: yes
+
+- name: Configure what should be updated in automatic updates
+  copy:
+    src: unattended-upgrades
+    dest: /etc/apt/apt.conf.d/55unattended-upgrades-nginx
+    mode: 0644
+    owner: root
+    group: root
+  become: yes
+  notify: restart unattended-upgrades
+
 - name: install nginx
   apt:
     name: nginx
@@ -10,26 +58,24 @@
   become: true
 
 - name: Configure nginx
-  template:
+  copy:
     src: nginx.conf
     dest: /etc/nginx/nginx.conf
+    mode: 0644
     owner: root
     group: root
-    mode: 0644
   become: yes
-  notify:
-    - restart nginx
+  notify: restart nginx
 
 - name: Configure default server block
-  template:
+  copy:
     src: default-nginx.conf
     dest: /etc/nginx/conf.d/default.conf
+    mode: 0644
     owner: root
     group: root
-    mode: 0644
   become: yes
-  notify:
-    - restart nginx
+  notify: restart nginx
 
 - name: ensure nginx service is running and enabled at boot
   service:

@@ -3,3 +3,9 @@
     name: nginx
     state: restarted
   become: yes
+
+- name: restart unattended-upgrades
+  service:
+    name: unattended-upgrades
+    state: restarted
+  become: yes
