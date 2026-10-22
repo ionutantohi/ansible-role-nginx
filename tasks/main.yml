@@ -1,4 +1,4 @@
-- name: Add directory for storing keys
+- name: add directory for storing keys
   file:
     path: /etc/apt/keyrings
     state: directory
@@ -7,20 +7,20 @@
     mode: 0755
   become: yes
 
-- name: Retrieve nginx key
+- name: retrieve nginx key
   get_url:
     url: https://nginx.org/keys/nginx_signing.key
     dest: /tmp/nginx.gpg
     mode: 0644
   become: yes
 
-- name: Dearmor the nginx key
+- name: dearmor the nginx key
   shell: cat /tmp/nginx.gpg | gpg --dearmor > /etc/apt/keyrings/nginx.gpg
   args:
     creates: /etc/apt/keyrings/nginx.gpg
   become: yes
 
-- name: Add nginx repository
+- name: add nginx repository
   apt_repository:
     repo: deb [signed-by=/etc/apt/keyrings/nginx.gpg] http://nginx.org/packages/{{ansible_distribution|lower}} {{ansible_distribution_release}} nginx
     filename: nginx
@@ -28,11 +28,10 @@
     update_cache: yes
   become: yes
 
-- name: Set up pinning to ensure nginx's packages are used over the distribution provided one
+- name: set up pinning to ensure nginx's packages are used over the distribution provided one
   copy:
     content: |
       Package: *
-      Pin: origin nginx.org
       Pin: release o=nginx
       Pin-Priority: 900
     dest: /etc/apt/preferences.d/99nginx
@@ -41,7 +40,7 @@
     mode: 0644
   become: yes
 
-- name: Configure what should be updated in automatic updates
+- name: configure what should be updated in automatic updates
   copy:
     src: unattended-upgrades
     dest: /etc/apt/apt.conf.d/55unattended-upgrades-nginx
@@ -57,7 +56,7 @@
     state: latest
   become: true
 
-- name: Configure nginx
+- name: configure nginx
   copy:
     src: nginx.conf
     dest: /etc/nginx/nginx.conf
@@ -67,7 +66,7 @@
   become: yes
   notify: restart nginx
 
-- name: Configure default server block
+- name: configure default server block
   copy:
     src: default-nginx.conf
     dest: /etc/nginx/conf.d/default.conf
