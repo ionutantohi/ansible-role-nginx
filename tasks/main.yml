@@ -54,7 +54,7 @@
   apt:
     name: nginx
     state: latest
-  become: true
+  become: yes
 
 - name: configure nginx
   copy:
