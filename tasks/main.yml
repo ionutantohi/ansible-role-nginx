@@ -16,8 +16,6 @@
 
 - name: dearmor the nginx key
   shell: cat /tmp/nginx.gpg | gpg --dearmor > /etc/apt/keyrings/nginx.gpg
-  args:
-    creates: /etc/apt/keyrings/nginx.gpg
   become: yes
 
 - name: add nginx repository
@@ -54,6 +52,7 @@
   apt:
     name: nginx
     state: latest
+    update_cache: yes
   become: yes
 
 - name: configure nginx
