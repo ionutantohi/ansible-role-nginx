@@ -19,11 +19,13 @@
   become: yes
 
 - name: add nginx repository
-  apt_repository:
-    repo: deb [signed-by=/etc/apt/keyrings/nginx.gpg] http://nginx.org/packages/{{ansible_distribution|lower}} {{ansible_distribution_release}} nginx
-    filename: nginx
-    state: present
-    update_cache: yes
+  deb822_repository:
+    name: nginx
+    types: deb
+    uris: "http://nginx.org/packages/{{ansible_distribution | lower}}"
+    suites: "{{ansible_distribution_release}}"
+    components: nginx
+    signed_by: /etc/apt/keyrings/nginx.gpg
   become: yes
 
 - name: set up pinning to ensure nginx's packages are used over the distribution provided one
